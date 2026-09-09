@@ -86,6 +86,7 @@ npm run check
 - [Operations](docs/operations.md)
 - [Security](docs/security.md)
 - [Publishing](docs/publishing.md)
+- [Changelog](CHANGELOG.md)
 
 ## License
 

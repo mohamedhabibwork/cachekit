@@ -1,0 +1,40 @@
+name: Release notes
+
+on:
+  push:
+    tags: ['v*']
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  notes:
+    if: github.event_name == 'release' || startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    env:
+      TAG: ${{ github.event.release.tag_name || github.ref_name }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Create GitHub Release
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$TAG" --generate-notes --title "$TAG" || gh release edit "$TAG" --generate-notes --title "$TAG"
+      - name: Update CHANGELOG.md
+        run: |
+          git fetch origin main
+          git checkout -B main origin/main
+          node scripts/update-changelog.mjs "$TAG"
+      - name: Commit changelog
+        run: |
+          git add CHANGELOG.md
+          git diff --cached --quiet || {
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git commit -m "docs: update changelog for $TAG"
+            git push origin HEAD:main
+          }

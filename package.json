@@ -29,7 +29,7 @@
     "./testing": { "types": "./dist/testing.d.ts", "import": "./dist/testing.js", "require": "./dist/testing.cjs" },
     "./package.json": "./package.json"
   },
-  "files": ["dist", "README.md", "LICENSE", "docs"],
+  "files": ["dist", "README.md", "CHANGELOG.md", "LICENSE", "docs"],
   "engines": { "node": ">=20" },
   "keywords": ["cache", "redis", "typescript", "memory-cache", "ttl", "swr"],
   "scripts": {
