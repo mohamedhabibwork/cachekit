@@ -21,6 +21,11 @@
     ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js", "require": "./dist/index.cjs" },
     "./memory": { "types": "./dist/memory.d.ts", "import": "./dist/memory.js", "require": "./dist/memory.cjs" },
     "./redis": { "types": "./dist/redis.d.ts", "import": "./dist/redis.js", "require": "./dist/redis.cjs" },
+    "./valkey": { "types": "./dist/valkey.d.ts", "import": "./dist/valkey.js", "require": "./dist/valkey.cjs" },
+    "./dragonfly": { "types": "./dist/dragonfly.d.ts", "import": "./dist/dragonfly.js", "require": "./dist/dragonfly.cjs" },
+    "./elasticache": { "types": "./dist/elasticache.d.ts", "import": "./dist/elasticache.js", "require": "./dist/elasticache.cjs" },
+    "./memorystore": { "types": "./dist/memorystore.d.ts", "import": "./dist/memorystore.js", "require": "./dist/memorystore.cjs" },
+    "./azure-redis": { "types": "./dist/azure-redis.d.ts", "import": "./dist/azure-redis.js", "require": "./dist/azure-redis.cjs" },
     "./testing": { "types": "./dist/testing.d.ts", "import": "./dist/testing.js", "require": "./dist/testing.cjs" },
     "./package.json": "./package.json"
   },
