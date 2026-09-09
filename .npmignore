@@ -1,0 +1,8 @@
+src/
+test/
+.github/
+cachekit-plan.md
+tsconfig.json
+tsup.config.ts
+vitest.config.ts
+eslint.config.js

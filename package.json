@@ -1,0 +1,54 @@
+{
+  "name": "@mohamedhabibwork/cachekit",
+  "version": "0.1.2",
+  "description": "Provider-first, runtime-portable TypeScript caching.",
+  "license": "MIT",
+  "author": "Mohamed Habib",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mohamedhabibwork/cachekit.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mohamedhabibwork/cachekit/issues"
+  },
+  "homepage": "https://github.com/mohamedhabibwork/cachekit#readme",
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js", "require": "./dist/index.cjs" },
+    "./memory": { "types": "./dist/memory.d.ts", "import": "./dist/memory.js", "require": "./dist/memory.cjs" },
+    "./redis": { "types": "./dist/redis.d.ts", "import": "./dist/redis.js", "require": "./dist/redis.cjs" },
+    "./testing": { "types": "./dist/testing.d.ts", "import": "./dist/testing.js", "require": "./dist/testing.cjs" },
+    "./package.json": "./package.json"
+  },
+  "files": ["dist", "README.md", "LICENSE", "docs"],
+  "engines": { "node": ">=20" },
+  "keywords": ["cache", "redis", "typescript", "memory-cache", "ttl", "swr"],
+  "scripts": {
+    "build": "tsup",
+    "clean": "rimraf dist coverage",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "check": "npm run lint && npm run typecheck && npm run test && npm run build",
+    "prepublishOnly": "npm run check",
+    "publish:if-needed": "node scripts/publish-if-needed.mjs"
+  },
+  "peerDependencies": { "redis": "^4.7.0" },
+  "peerDependenciesMeta": { "redis": { "optional": true } },
+  "devDependencies": {
+    "@eslint/js": "^9.24.0",
+    "@types/node": "^22.15.2",
+    "eslint": "^9.24.0",
+    "rimraf": "^6.0.1",
+    "tsup": "^8.5.0",
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.30.1",
+    "vitest": "^3.1.2"
+  },
+  "publishConfig": { "access": "public", "provenance": true }
+}
