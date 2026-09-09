@@ -1,5 +1,16 @@
 # CacheKit
 
+[![npm version](https://img.shields.io/npm/v/@mohamedhabibwork/cachekit)](https://www.npmjs.com/package/@mohamedhabibwork/cachekit)
+[![npm downloads](https://img.shields.io/npm/dm/@mohamedhabibwork/cachekit)](https://www.npmjs.com/package/@mohamedhabibwork/cachekit)
+[![Latest Release](https://img.shields.io/github/v/release/mohamedhabibwork/cachekit)](https://github.com/mohamedhabibwork/cachekit/releases/latest)
+[![License: MIT](https://img.shields.io/npm/l/@mohamedhabibwork/cachekit)](LICENSE)
+[![GitHub: @mohamedhabibwork](https://img.shields.io/badge/GitHub-@mohamedhabibwork-181717?logo=github&logoColor=white)](https://github.com/mohamedhabibwork)
+[![Node.js >= 20](https://img.shields.io/node/v/@mohamedhabibwork/cachekit)](https://nodejs.org)
+[![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
+[![CI](https://github.com/mohamedhabibwork/cachekit/actions/workflows/ci.yml/badge.svg)](https://github.com/mohamedhabibwork/cachekit/actions/workflows/ci.yml)
+[![Release notes](https://github.com/mohamedhabibwork/cachekit/actions/workflows/release-notes.yml/badge.svg)](https://github.com/mohamedhabibwork/cachekit/actions/workflows/release-notes.yml)
+[![Socket](https://badge.socket.dev/npm/package/@mohamedhabibwork/cachekit)](https://socket.dev/npm/package/@mohamedhabibwork/cachekit)
+
 Provider-first, runtime-portable TypeScript caching for Node.js 20+, Bun, and Deno.
 
 CacheKit gives applications one deliberate cache contract without hiding provider differences. Core imports have no provider SDK dependencies; provider entrypoints load their SDK only when you use them.
