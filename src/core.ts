@@ -1,8 +1,8 @@
 /** Shared public types and small runtime-neutral utilities. */
-export type CacheType = 'memory' | 'redis' | (string & {});
+export type CacheType = "memory" | "redis" | (string & {});
 export type CacheKey = string | number;
-export type Ttl = number | `${number}${'ms' | 's' | 'm' | 'h' | 'd'}`;
-export type CapabilityStatus = 'native' | 'emulated' | 'unsupported';
+export type Ttl = number | `${number}${"ms" | "s" | "m" | "h" | "d"}`;
+export type CapabilityStatus = "native" | "emulated" | "unsupported";
 
 export interface CacheCapabilities {
   ttl: CapabilityStatus;
@@ -13,7 +13,7 @@ export interface CacheCapabilities {
   clearNamespace: CapabilityStatus;
   distributedLocks: CapabilityStatus;
   pubsubInvalidation: CapabilityStatus;
-  persistence: 'memory' | 'disk' | 'remote';
+  persistence: "memory" | "disk" | "remote";
 }
 
 export interface CacheEntry<T> {
@@ -27,7 +27,7 @@ export interface CacheEntry<T> {
 }
 
 export interface CacheHealth {
-  status: 'ok' | 'degraded' | 'error';
+  status: "ok" | "degraded" | "error";
   provider: string;
   latency: number;
   details?: Readonly<Record<string, unknown>>;
@@ -39,7 +39,7 @@ export interface Codec<T = unknown> {
   decode(bytes: Uint8Array): T | Promise<T>;
 }
 
-export type CodecInput = 'json' | 'text' | 'bytes' | Codec;
+export type CodecInput = "json" | "text" | "bytes" | Codec;
 
 export interface NativeOptionsMap {}
 export interface NativeClientMap {}
@@ -50,8 +50,13 @@ export type NativeClientFor<T extends CacheType> = T extends keyof NativeClientM
   ? NativeClientMap[T]
   : unknown;
 
-interface BaseOptions<T extends CacheType> { signal?: AbortSignal; native?: NativeOptionsFor<T> }
-export interface GetOptions<T extends CacheType = CacheType> extends BaseOptions<T> { allowStale?: boolean }
+interface BaseOptions<T extends CacheType> {
+  signal?: AbortSignal;
+  native?: NativeOptionsFor<T>;
+}
+export interface GetOptions<T extends CacheType = CacheType> extends BaseOptions<T> {
+  allowStale?: boolean;
+}
 export interface SetOptions<T extends CacheType = CacheType> extends BaseOptions<T> {
   ttl?: Ttl;
   staleTtl?: Ttl;
@@ -61,12 +66,30 @@ export interface GetOrSetOptions<T extends CacheType = CacheType> extends SetOpt
   /** Allows callers that cannot wait for a refresh to receive an in-window stale value. */
   serveStale?: boolean;
 }
-export interface LockOptions { wait?: Ttl; lease?: Ttl; signal?: AbortSignal }
-export interface CacheWrite<V = unknown, T extends CacheType = CacheType> { key: CacheKey; value: V; options?: SetOptions<T> }
-export interface SetResult { stored: boolean; expiresAt?: number }
-export interface DeleteResult { deleted: boolean }
-export interface ClearResult { deleted: number }
-export interface TagInvalidationResult { invalidated: number; mode: 'delete' | 'versioned' | 'unsupported' }
+export interface LockOptions {
+  wait?: Ttl;
+  lease?: Ttl;
+  signal?: AbortSignal;
+}
+export interface CacheWrite<V = unknown, T extends CacheType = CacheType> {
+  key: CacheKey;
+  value: V;
+  options?: SetOptions<T>;
+}
+export interface SetResult {
+  stored: boolean;
+  expiresAt?: number;
+}
+export interface DeleteResult {
+  deleted: boolean;
+}
+export interface ClearResult {
+  deleted: number;
+}
+export interface TagInvalidationResult {
+  invalidated: number;
+  mode: "delete" | "versioned" | "unsupported";
+}
 export type CacheLoader<T> = (context: { signal: AbortSignal }) => Promise<T> | T;
 
 export interface Cache<T extends CacheType = CacheType> {
@@ -95,7 +118,10 @@ export class CacheError extends Error {
   readonly provider?: string;
   readonly operation?: string;
   readonly retryable: boolean;
-  constructor(message: string, options: { provider?: string; operation?: string; retryable?: boolean; cause?: unknown } = {}) {
+  constructor(
+    message: string,
+    options: { provider?: string; operation?: string; retryable?: boolean; cause?: unknown } = {},
+  ) {
     super(message, options.cause === undefined ? undefined : { cause: options.cause });
     this.name = new.target.name;
     this.provider = options.provider;
@@ -115,50 +141,75 @@ const encoder = new TextEncoder();
 const decoder = new TextDecoder();
 export const codecs = {
   json: {
-    name: 'json',
-    encode(value: unknown) { return encoder.encode(JSON.stringify(value)); },
-    decode(bytes: Uint8Array) { return JSON.parse(decoder.decode(bytes)); },
+    name: "json",
+    encode(value: unknown) {
+      return encoder.encode(JSON.stringify(value));
+    },
+    decode(bytes: Uint8Array) {
+      return JSON.parse(decoder.decode(bytes));
+    },
   } satisfies Codec,
   text: {
-    name: 'text',
-    encode(value: string) { return encoder.encode(value); },
-    decode(bytes: Uint8Array) { return decoder.decode(bytes); },
+    name: "text",
+    encode(value: string) {
+      return encoder.encode(value);
+    },
+    decode(bytes: Uint8Array) {
+      return decoder.decode(bytes);
+    },
   } satisfies Codec<string>,
   bytes: {
-    name: 'bytes',
-    encode(value: Uint8Array) { return value.slice(); },
-    decode(bytes: Uint8Array) { return bytes.slice(); },
+    name: "bytes",
+    encode(value: Uint8Array) {
+      return value.slice();
+    },
+    decode(bytes: Uint8Array) {
+      return bytes.slice();
+    },
   } satisfies Codec<Uint8Array>,
 };
 
 export function resolveCodec(input: CodecInput | undefined): Codec {
-  if (!input || input === 'json') return codecs.json;
-  if (input === 'text') return codecs.text;
-  if (input === 'bytes') return codecs.bytes;
-  if (typeof input.encode !== 'function' || typeof input.decode !== 'function' || !input.name) {
-    throw new CacheInvalidConfigError('codec must be a built-in codec name or an object with name, encode, and decode.');
+  if (!input || input === "json") return codecs.json;
+  if (input === "text") return codecs.text;
+  if (input === "bytes") return codecs.bytes;
+  if (typeof input.encode !== "function" || typeof input.decode !== "function" || !input.name) {
+    throw new CacheInvalidConfigError(
+      "codec must be a built-in codec name or an object with name, encode, and decode.",
+    );
   }
   return input;
 }
 
-export function parseTtl(value: Ttl, field = 'ttl'): number {
-  if (typeof value === 'number') {
-    if (!Number.isFinite(value) || value <= 0) throw new CacheInvalidConfigError(`${field} must be a positive finite number of milliseconds.`);
+export function parseTtl(value: Ttl, field = "ttl"): number {
+  if (typeof value === "number") {
+    if (!Number.isFinite(value) || value <= 0)
+      throw new CacheInvalidConfigError(
+        `${field} must be a positive finite number of milliseconds.`,
+      );
     return value;
   }
   const match = /^(\d+(?:\.\d+)?)(ms|s|m|h|d)$/.exec(value);
-  if (!match) throw new CacheInvalidConfigError(`${field} must be a positive duration such as "250ms", "5m", or "1h".`);
+  if (!match)
+    throw new CacheInvalidConfigError(
+      `${field} must be a positive duration such as "250ms", "5m", or "1h".`,
+    );
   const amount = Number(match[1]);
   const units: Record<string, number> = { ms: 1, s: 1_000, m: 60_000, h: 3_600_000, d: 86_400_000 };
   const milliseconds = amount * units[match[2]!]!;
-  if (!Number.isFinite(milliseconds) || milliseconds <= 0) throw new CacheInvalidConfigError(`${field} is out of range.`);
+  if (!Number.isFinite(milliseconds) || milliseconds <= 0)
+    throw new CacheInvalidConfigError(`${field} is out of range.`);
   return milliseconds;
 }
 
 export function normalizeKey(key: CacheKey, namespace?: string): string {
   const raw = String(key);
-  if (!raw || hasControlCharacters(raw)) throw new CacheInvalidConfigError('key must be non-empty and must not contain control characters.');
-  if (raw.length > 1024) throw new CacheInvalidConfigError('key must not be longer than 1024 characters.');
+  if (!raw || hasControlCharacters(raw))
+    throw new CacheInvalidConfigError(
+      "key must be non-empty and must not contain control characters.",
+    );
+  if (raw.length > 1024)
+    throw new CacheInvalidConfigError("key must not be longer than 1024 characters.");
   return namespace ? `${namespace}\u001f${raw}` : raw;
 }
 
@@ -171,5 +222,6 @@ export function hasControlCharacters(value: string): boolean {
 }
 
 export function throwIfAborted(signal?: AbortSignal): void {
-  if (signal?.aborted) throw signal.reason ?? new DOMException('The operation was aborted.', 'AbortError');
+  if (signal?.aborted)
+    throw signal.reason ?? new DOMException("The operation was aborted.", "AbortError");
 }
