@@ -2,7 +2,7 @@ name: Release notes
 
 on:
   push:
-    tags: ['v*']
+    tags: ["v*"]
   release:
     types: [published]
 
