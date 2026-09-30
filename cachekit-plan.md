@@ -15,32 +15,32 @@
 
 ## 2. Scope and support matrix
 
-| Runtime | Support | Notes |
-| --- | --- | --- |
-| Node.js 20+ | Full | Primary target; CI on current LTS releases. |
-| Bun 1.1+ | Full | Native npm compatibility; runtime smoke tests. |
-| Deno 2+ | Full | npm compatibility; avoid unguarded Node built-ins in core. |
-| TypeScript 5.9, 6.x, 7.x | Supported | Declaration/type-test matrix for all three compiler lines. |
-| Browsers | Not a core target | Some HTTP-capable providers may work through a future browser entrypoint, but credentials and embedded drivers are server concerns. |
+| Runtime                  | Support           | Notes                                                                                                                               |
+| ------------------------ | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| Node.js 20+              | Full              | Primary target; CI on current LTS releases.                                                                                         |
+| Bun 1.1+                 | Full              | Native npm compatibility; runtime smoke tests.                                                                                      |
+| Deno 2+                  | Full              | npm compatibility; avoid unguarded Node built-ins in core.                                                                          |
+| TypeScript 5.9, 6.x, 7.x | Supported         | Declaration/type-test matrix for all three compiler lines.                                                                          |
+| Browsers                 | Not a core target | Some HTTP-capable providers may work through a future browser entrypoint, but credentials and embedded drivers are server concerns. |
 
 ## 3. Provider catalogue
 
-| Family | Provider types | Entrypoint | Suggested optional peer dependency |
-| --- | --- | --- | --- |
-| Distributed | `redis` | `cachekit/redis` | `redis` |
-| Distributed | `valkey` | `cachekit/valkey` | `@valkey/valkey-glide` or compatible selected client |
-| Distributed | `memcached` | `cachekit/memcached` | `memjs` (portable) or a documented Node-only alternative |
-| Distributed | `dragonfly` | `cachekit/dragonfly` | `redis` (Redis protocol) |
-| AWS managed | `elasticache` | `cachekit/elasticache` | `redis` or `memjs`; uses the selected ElastiCache engine and endpoint |
-| GCP managed | `memorystore` | `cachekit/memorystore` | `redis` or `memjs`; uses the selected Memorystore engine and endpoint |
-| Azure managed | `azure-redis` | `cachekit/azure-redis` | `redis`; supports TLS, Entra token integration where supported by the client |
-| Serverless managed | `momento` | `cachekit/momento` | `@gomomento/sdk` |
-| Embedded/file | `sqlite` | `cachekit/sqlite` | adapter-specific SQLite package; Node/Bun/Deno variants are documented separately |
-| Embedded/file | `rocksdb` | `cachekit/rocksdb` | implementation-specific optional binding; Node-focused |
-| Embedded/file | `leveldb` | `cachekit/leveldb` | `classic-level` / compatible LevelDB implementation |
-| Embedded/file | `lmdb` | `cachekit/lmdb` | `lmdb`; Node/Bun support according to upstream bindings |
-| Development/test | `memory` | `cachekit/memory` | none |
-| Extensibility | `custom` | `cachekit` | supplied by the application |
+| Family             | Provider types | Entrypoint             | Suggested optional peer dependency                                                |
+| ------------------ | -------------- | ---------------------- | --------------------------------------------------------------------------------- |
+| Distributed        | `redis`        | `cachekit/redis`       | `redis`                                                                           |
+| Distributed        | `valkey`       | `cachekit/valkey`      | `@valkey/valkey-glide` or compatible selected client                              |
+| Distributed        | `memcached`    | `cachekit/memcached`   | `memjs` (portable) or a documented Node-only alternative                          |
+| Distributed        | `dragonfly`    | `cachekit/dragonfly`   | `redis` (Redis protocol)                                                          |
+| AWS managed        | `elasticache`  | `cachekit/elasticache` | `redis` or `memjs`; uses the selected ElastiCache engine and endpoint             |
+| GCP managed        | `memorystore`  | `cachekit/memorystore` | `redis` or `memjs`; uses the selected Memorystore engine and endpoint             |
+| Azure managed      | `azure-redis`  | `cachekit/azure-redis` | `redis`; supports TLS, Entra token integration where supported by the client      |
+| Serverless managed | `momento`      | `cachekit/momento`     | `@gomomento/sdk`                                                                  |
+| Embedded/file      | `sqlite`       | `cachekit/sqlite`      | adapter-specific SQLite package; Node/Bun/Deno variants are documented separately |
+| Embedded/file      | `rocksdb`      | `cachekit/rocksdb`     | implementation-specific optional binding; Node-focused                            |
+| Embedded/file      | `leveldb`      | `cachekit/leveldb`     | `classic-level` / compatible LevelDB implementation                               |
+| Embedded/file      | `lmdb`         | `cachekit/lmdb`        | `lmdb`; Node/Bun support according to upstream bindings                           |
+| Development/test   | `memory`       | `cachekit/memory`      | none                                                                              |
+| Extensibility      | `custom`       | `cachekit`             | supplied by the application                                                       |
 
 Managed services are connection profiles rather than a false separate protocol: ElastiCache, Memorystore, Azure Cache for Redis, Dragonfly, and Valkey retain the semantics of their actual engine. The dedicated entrypoints provide validation, secure defaults, discovery hooks where applicable, and provider-specific configuration types.
 
@@ -68,29 +68,33 @@ The package ships dual ESM/CJS where the runtime and provider binding permit it;
 ## 5. Public API
 
 ```ts
-import { createCache } from '@mohamedhabibwork/cachekit';
+import { createCache } from "@mohamedhabibwork/cachekit";
 
 const cache = await createCache({
-  type: 'redis',
+  type: "redis",
   url: process.env.REDIS_URL,
-  namespace: 'catalog:v1',
-  codec: 'json',
-  defaultTtl: '10m',
+  namespace: "catalog:v1",
+  codec: "json",
+  defaultTtl: "10m",
 });
 
-await cache.set('product:42', { id: 42, name: 'Keyboard' }, {
-  ttl: '5m',
-  tags: ['products', 'product:42'],
-  // Autocompleted as Redis SET options—not accepted by other drivers.
-  native: { NX: true },
-});
+await cache.set(
+  "product:42",
+  { id: 42, name: "Keyboard" },
+  {
+    ttl: "5m",
+    tags: ["products", "product:42"],
+    // Autocompleted as Redis SET options—not accepted by other drivers.
+    native: { NX: true },
+  },
+);
 
-const product = await cache.get<Product>('product:42');
-const fresh = await cache.getOrSet('product:42', loadProduct, {
-  ttl: '5m',
-  staleTtl: '30s',
-  tags: ['products', 'product:42'],
-  lock: { wait: '2s', lease: '10s' },
+const product = await cache.get<Product>("product:42");
+const fresh = await cache.getOrSet("product:42", loadProduct, {
+  ttl: "5m",
+  staleTtl: "30s",
+  tags: ["products", "product:42"],
+  lock: { wait: "2s", lease: "10s" },
 });
 ```
 
@@ -102,17 +106,29 @@ export interface Cache<TType extends CacheType = CacheType> {
   readonly capabilities: CacheCapabilities;
 
   get<T = unknown>(key: CacheKey, options?: GetOptions<TType>): Promise<T | undefined>;
-  getEntry<T = unknown>(key: CacheKey, options?: GetOptions<TType>): Promise<CacheEntry<T> | undefined>;
-  getMany<T = unknown>(keys: readonly CacheKey[], options?: GetOptions<TType>): Promise<Map<string, T>>;
+  getEntry<T = unknown>(
+    key: CacheKey,
+    options?: GetOptions<TType>,
+  ): Promise<CacheEntry<T> | undefined>;
+  getMany<T = unknown>(
+    keys: readonly CacheKey[],
+    options?: GetOptions<TType>,
+  ): Promise<Map<string, T>>;
   set<T>(key: CacheKey, value: T, options?: SetOptions<TType>): Promise<SetResult>;
   setMany(entries: readonly CacheWrite[], options?: SetManyOptions<TType>): Promise<SetManyResult>;
   has(key: CacheKey, options?: HasOptions<TType>): Promise<boolean>;
   delete(key: CacheKey, options?: DeleteOptions<TType>): Promise<DeleteResult>;
-  deleteMany(keys: readonly CacheKey[], options?: DeleteManyOptions<TType>): Promise<DeleteManyResult>;
+  deleteMany(
+    keys: readonly CacheKey[],
+    options?: DeleteManyOptions<TType>,
+  ): Promise<DeleteManyResult>;
   clear(options?: ClearOptions<TType>): Promise<ClearResult>;
   touch(key: CacheKey, ttl: Ttl, options?: TouchOptions<TType>): Promise<boolean>;
   getOrSet<T>(key: CacheKey, loader: CacheLoader<T>, options?: GetOrSetOptions<TType>): Promise<T>;
-  invalidateTags(tags: readonly string[], options?: TagInvalidationOptions<TType>): Promise<TagInvalidationResult>;
+  invalidateTags(
+    tags: readonly string[],
+    options?: TagInvalidationOptions<TType>,
+  ): Promise<TagInvalidationResult>;
   withLock<T>(key: CacheKey, fn: () => Promise<T>, options?: LockOptions<TType>): Promise<T>;
   health(options?: HealthOptions<TType>): Promise<CacheHealth>;
   native(): NativeClientFor<TType>;
@@ -141,19 +157,19 @@ The factory discriminates on `type`; therefore `createCache({ type: 'momento', .
 
 ```ts
 const cache = await createCache({
-  type: 'momento',
+  type: "momento",
   authToken: process.env.MOMENTO_AUTH_TOKEN!,
-  cacheName: 'catalog',
-  defaultTtl: '10m',
-  requestTimeout: '750ms',
+  cacheName: "catalog",
+  defaultTtl: "10m",
+  requestTimeout: "750ms",
 });
 
 const local = await createCache({
-  type: 'sqlite',
-  filename: './var/cache.sqlite',
-  table: 'cache_entries',
+  type: "sqlite",
+  filename: "./var/cache.sqlite",
+  table: "cache_entries",
   wal: true,
-  codec: { type: 'json', schema: ProductSchema },
+  codec: { type: "json", schema: ProductSchema },
 });
 ```
 
@@ -186,11 +202,11 @@ interface CacheEnvelope {
 `ttl` defines fresh lifetime. `staleTtl` opens a bounded stale window after fresh expiry; outside that window the item is a miss.
 
 ```ts
-await cache.getOrSet('home:summary', renderSummary, {
-  ttl: '30s',
-  staleTtl: '2m',
+await cache.getOrSet("home:summary", renderSummary, {
+  ttl: "30s",
+  staleTtl: "2m",
   jitter: 0.1,
-  lock: { wait: '500ms', lease: '15s', onTimeout: 'serve-stale' },
+  lock: { wait: "500ms", lease: "15s", onTimeout: "serve-stale" },
 });
 ```
 
@@ -203,8 +219,8 @@ Locks require an atomic compare-and-delete release token. Redis/Valkey/Dragonfly
 Tags are an optional, capability-gated secondary index. An entry can belong to multiple tags, and invalidation is idempotent.
 
 ```ts
-await cache.set('product:42', product, { tags: ['products', 'product:42'] });
-await cache.invalidateTags(['products']);
+await cache.set("product:42", product, { tags: ["products", "product:42"] });
+await cache.invalidateTags(["products"]);
 ```
 
 Tag implementation is selected per driver:
@@ -218,16 +234,16 @@ The API reports whether invalidation is immediate deletion, versioned invalidati
 ## 10. Multi-tier cache
 
 ```ts
-import { createTieredCache } from '@mohamedhabibwork/cachekit';
+import { createTieredCache } from "@mohamedhabibwork/cachekit";
 
 const cache = await createTieredCache({
   tiers: [
-    { name: 'l1', cache: { type: 'memory', maxEntries: 5_000 }, maxTtl: '30s' },
-    { name: 'l2', cache: { type: 'redis', url: process.env.REDIS_URL! } },
+    { name: "l1", cache: { type: "memory", maxEntries: 5_000 }, maxTtl: "30s" },
+    { name: "l2", cache: { type: "redis", url: process.env.REDIS_URL! } },
   ],
-  write: 'through',       // or 'back' with durable queue integration
+  write: "through", // or 'back' with durable queue integration
   promoteOnRead: true,
-  coherence: 'best-effort',
+  coherence: "best-effort",
 });
 ```
 
@@ -236,18 +252,22 @@ The tiered driver checks L1 then L2, promotes valid L2 results, and writes/inval
 ## 11. Manager, namespaces, and routing
 
 ```ts
-import { createCacheManager } from '@mohamedhabibwork/cachekit';
+import { createCacheManager } from "@mohamedhabibwork/cachekit";
 
 const caches = await createCacheManager({
-  default: 'application',
+  default: "application",
   caches: {
-    application: { type: 'redis', url: process.env.REDIS_URL! },
-    sessions: { type: 'momento', authToken: process.env.MOMENTO_AUTH_TOKEN!, cacheName: 'sessions' },
-    local: { type: 'sqlite', filename: './var/cache.sqlite' },
+    application: { type: "redis", url: process.env.REDIS_URL! },
+    sessions: {
+      type: "momento",
+      authToken: process.env.MOMENTO_AUTH_TOKEN!,
+      cacheName: "sessions",
+    },
+    local: { type: "sqlite", filename: "./var/cache.sqlite" },
   },
 });
 
-await caches.cache('application').set('settings', settings, { ttl: '1h' });
+await caches.cache("application").set("settings", settings, { ttl: "1h" });
 ```
 
 `cache(name)` preserves its exact provider type for statically declared managers. Manager middleware may route by key prefix, tenant, workload class, or read/write policy; fallback is explicit and only activated for configured retryable error classes. Failure policies must never turn authentication/configuration errors into silent cache misses.
@@ -279,7 +299,7 @@ interface CacheCapabilities {
   clearNamespace: CapabilityStatus;
   distributedLocks: CapabilityStatus;
   pubsubInvalidation: CapabilityStatus;
-  persistence: 'memory' | 'disk' | 'remote';
+  persistence: "memory" | "disk" | "remote";
 }
 ```
 
@@ -288,19 +308,27 @@ interface CacheCapabilities {
 ## 14. Custom provider API
 
 ```ts
-import { defineCacheProvider, registerCacheProvider } from '@mohamedhabibwork/cachekit';
+import { defineCacheProvider, registerCacheProvider } from "@mohamedhabibwork/cachekit";
 
 const acme = defineCacheProvider({
-  type: 'acme-cache',
-  validate(config) { /* return validated config */ },
+  type: "acme-cache",
+  validate(config) {
+    /* return validated config */
+  },
   async create(config, context) {
     return {
-      type: 'acme-cache',
-      capabilities: { /* truthful capability map */ },
-      get: async (key, options) => { /* ... */ },
-      set: async (key, value, options) => { /* ... */ },
-      delete: async (key) => { /* ... */ },
-      health: async () => ({ status: 'ok' }),
+      type: "acme-cache",
+      capabilities: {/* truthful capability map */},
+      get: async (key, options) => {
+        /* ... */
+      },
+      set: async (key, value, options) => {
+        /* ... */
+      },
+      delete: async (key) => {
+        /* ... */
+      },
+      health: async () => ({ status: "ok" }),
       native: () => client,
       close: async () => client.close(),
     };

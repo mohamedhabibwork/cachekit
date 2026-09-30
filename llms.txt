@@ -1,0 +1,139 @@
+# cachekit (@mohamedhabibwork/cachekit)
+
+> Provider-first, runtime-portable TypeScript caching for Node.js >= 20, Bun, and Deno. One deliberate cache contract — TTL, stale-while-revalidate, tag invalidation, deduplicated `getOrSet`, codecs — with a full in-memory provider that needs zero dependencies and a Redis-protocol provider whose optional `redis` peer is loaded only when you create it (or inject your own client). Dual ESM/CJS with full TypeScript declarations.
+
+## Install
+
+```bash
+npm install @mohamedhabibwork/cachekit
+# The Redis-protocol provider is the only place an SDK is ever needed:
+npm install @mohamedhabibwork/cachekit redis
+# …or inject your own compatible client and install nothing extra.
+```
+
+**Entrypoints** (import only what you use): `@mohamedhabibwork/cachekit`
+(core + memory + factory), `.../memory`, `.../redis`, `.../valkey`,
+`.../dragonfly`, `.../elasticache`, `.../memorystore`, `.../azure-redis`
+(Redis-protocol services), `.../testing` (fake clock + fake cache).
+
+If `redis` is missing when a connection must be auto-created, the provider
+throws `CacheDependencyMissingError` with the exact `npm install` command —
+never a module-not-found crash.
+
+## Quick start
+
+```ts
+import { createCache } from "@mohamedhabibwork/cachekit";
+
+const cache = await createCache({ type: "memory", namespace: "catalog:v1", defaultTtl: "5m" });
+
+await cache.set("product:42", { id: 42, name: "Keyboard" }, { ttl: "5m", tags: ["products"] });
+
+const product = await cache.get<{ id: number }>("product:42"); // fresh-only by default
+
+const loaded = await cache.getOrSet("product:43", async () => fetchFromDb(43), {
+  ttl: "10m",
+  staleTtl: "1h",      // serve stale while one caller refreshes
+});
+```
+
+## Core API
+
+```ts
+cache.get<V>(key, { allowStale?: boolean, signal? });         // miss => undefined; null is cacheable
+cache.getMany<V>(keys, options?);
+cache.set(key, value, { ttl?, staleTtl?, tags?, native?, overwrite?, signal? });
+cache.getOrSet<V>(key, loader: ({ signal }) => V | Promise<V>, { ttl?, staleTtl?, serveStale?, tags? });
+cache.delete(key, options?);
+cache.deleteMany(keys, options?);
+cache.invalidateTags(tags, options?);                          // TagInvalidationResult
+cache.clear(options?);
+cache.health?();                                              // provider health, where supported
+await cache.close();
+cache.capabilities;                                           // { ttl, atomicSetIfAbsent, tags, getMany, clearNamespace, distributedLocks, pubsubInvalidation, persistence }
+```
+
+## Manager (named caches)
+
+Lazy per-name creation from config, warmup, per-cache health, single close.
+
+```ts
+import { createCacheManager } from "@mohamedhabibwork/cachekit";
+const caches = createCacheManager({
+  default: "catalog",
+  caches: {
+    catalog: { type: "memory", namespace: "catalog:v1", defaultTtl: "5m" },
+    sessions: { type: "redis", url: process.env.REDIS_URL },
+  },
+});
+const catalog = await caches.cache("catalog"); // Promise<Cache<"memory">>, instance reused
+await caches.default();          // the default cache
+await caches.warmup();           // create all configured caches now (fails fast on bad config)
+await caches.health();           // Record<name, CacheHealth { status: ok|degraded|error, provider, latency, details? }>
+await caches.close();            // close every created cache, forget instances
+```
+Unknown names reject with CacheInvalidConfigError; failed creations are evicted so the next call retries.
+
+## Semantics (do not get these wrong)
+
+- A cache miss is `undefined`; `null` is a cacheable value.
+- `ttl` is the fresh period; `staleTtl` adds a stale window. `get()` returns
+  fresh values only — pass `allowStale: true` to accept in-window stale data.
+- `getOrSet()` deduplicates concurrent loads in-process. With a stale entry it
+  returns stale immediately while one caller refreshes, unless `serveStale: false`.
+- Built-in codecs: `json` (default), `text`, `bytes`. Custom codecs need
+  `name`, `encode`, `decode`.
+- Keys and tags reject control characters; namespaces use an internal separator.
+- Inspect `capabilities` before relying on provider-specific behavior —
+  unsupported operations throw `CacheUnsupportedOperationError`, they are never
+  silently emulated.
+
+## Providers
+
+| Provider        | Entrypoint  | Extra dependency                                   |
+| --------------- | ----------- | -------------------------------------------------- |
+| Memory          | root `/memory` | none — TTL, SWR, tags, locks, codecs            |
+| Redis protocol  | `/redis`    | optional `redis` peer; inject a client instead     |
+| Valkey          | `/valkey`   | same as redis                                      |
+| Dragonfly       | `/dragonfly`| same as redis                                      |
+| ElastiCache     | `/elasticache` | same as redis                                   |
+| Memorystore     | `/memorystore` | same as redis                                   |
+| Azure Cache for Redis | `/azure-redis` | same as redis                            |
+| Custom          | root        | register with `defineCacheProvider` / `registerCacheProvider` |
+
+Redis-protocol providers work against any compatible endpoint (Redis, Valkey,
+ElastiCache, Memorystore, Dragonfly). Tags and namespace clear are
+deliberately `unsupported` there (inspect `capabilities`); distributed locks
+are native.
+
+## Errors
+
+`CacheError` base; subclasses: `CacheInvalidConfigError`,
+`CacheDependencyMissingError` (missing optional SDK — message contains the
+install command), `CacheDecodeError`, `CacheSerializationError`,
+`CacheLockTimeoutError`, `CacheUnsupportedOperationError`, `CacheClosedError`.
+Everything network-bound accepts `signal`.
+
+## Testing
+
+```ts
+import { createMemoryCache } from "@mohamedhabibwork/cachekit";
+import { createFakeClock } from "@mohamedhabibwork/cachekit/testing";
+const clock = createFakeClock();
+const cache = await createMemoryCache({ clock: clock.now }); // deterministic TTL tests
+clock.advance(60_000); // time travel
+```
+
+## Runtime support
+
+- Node.js >= 20 (primary), Bun, Deno. Dual ESM/CJS with full declarations.
+- Core has no runtime dependencies at all.
+
+## Links
+
+- npm: https://www.npmjs.com/package/@mohamedhabibwork/cachekit
+- README with full examples: ./README.md (also in the published tarball)
+- Guides: ./docs/caching-patterns.md, ./docs/frameworks.md (Express, Fastify,
+  NestJS, Hono, Next.js, Elysia), ./docs/examples.md (end-to-end apps),
+  ./docs/custom-providers.md, ./docs/operations.md, ./docs/security.md,
+  ./docs/architecture.md (shipped in the tarball)
