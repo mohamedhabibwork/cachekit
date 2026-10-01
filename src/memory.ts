@@ -103,6 +103,9 @@ export class MemoryCache implements Cache<"memory"> {
     }
     const stale = stored.expiresAt !== undefined && now >= stored.expiresAt;
     if (stale && !options.allowStale) return undefined;
+    // Re-insert to keep Map order as least-recently-used first for eviction.
+    this.records.delete(physicalKey);
+    this.records.set(physicalKey, stored);
     try {
       const value = (await this.codec.decode(stored.value.slice())) as V;
       return {
@@ -262,10 +265,12 @@ export class MemoryCache implements Cache<"memory"> {
     this.ensureOpen();
     throwIfAborted(options.signal);
     const physical = this.key(key);
-    const predecessor = this.locks.get(physical);
-    if (predecessor) {
-      const wait = options.wait === undefined ? undefined : parseTtl(options.wait, "lock.wait");
-      await this.waitFor(predecessor, wait, options.signal);
+    const wait = options.wait === undefined ? undefined : parseTtl(options.wait, "lock.wait");
+    const deadline = wait === undefined ? undefined : this.clock() + wait;
+    // Re-check after every release so only one waiter acquires the lock at a time.
+    for (let held = this.locks.get(physical); held; held = this.locks.get(physical)) {
+      const remaining = deadline === undefined ? undefined : Math.max(0, deadline - this.clock());
+      await this.waitFor(held, remaining, options.signal);
     }
     let release!: () => void;
     const gate = new Promise<void>((resolve) => {

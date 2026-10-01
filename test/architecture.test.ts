@@ -13,6 +13,7 @@ import { describe, expect, it } from "vitest";
  *                         memorystore, azure-redis). Extend redis-compatible only;
  *                         never import a sibling provider.
  *   testing.ts          — the in-memory fake; core + memory only.
+ *   helpers.ts, layered.ts, namespaced.ts — contract-level utilities; core only.
  *   manager.ts          — named multi-cache manager; core + the factory only.
  *   index.ts            — composition / public API. Unrestricted.
  *
@@ -35,6 +36,9 @@ const allowedImports: Record<string, string[]> = {
   "memorystore.ts": ["redis-compatible.ts"],
   "azure-redis.ts": ["redis-compatible.ts"],
   "testing.ts": ["core.ts", "memory.ts"],
+  "helpers.ts": ["core.ts"],
+  "layered.ts": ["core.ts"],
+  "namespaced.ts": ["core.ts"],
   "manager.ts": ["core.ts", "index.ts", "logger.ts"],
 };
 

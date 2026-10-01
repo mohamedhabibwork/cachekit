@@ -53,3 +53,15 @@ describe("MemoryCache", () => {
     await expect(cache.get("key")).rejects.toBeInstanceOf(CacheClosedError);
   });
 });
+
+describe("MemoryCache eviction", () => {
+  it("evicts the least recently used entry when full", async () => {
+    const cache = createMemoryCache({ maxEntries: 2 });
+    await cache.set("a", 1);
+    await cache.set("b", 2);
+    await cache.get("a");
+    await cache.set("c", 3);
+    expect(await cache.get("a")).toBe(1);
+    expect(await cache.get("b")).toBeUndefined();
+  });
+});

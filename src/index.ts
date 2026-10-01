@@ -62,6 +62,11 @@ export function registerCacheProvider<T extends CacheType, Config>(
   providers.set(provider.type, defineCacheProvider(provider));
 }
 export { createCacheManager } from "./manager.js";
+export { addIfAbsent, decrement, increment, memoize, pull } from "./helpers.js";
+export type { CounterOptions, MemoizeOptions } from "./helpers.js";
+export { createLayeredCache } from "./layered.js";
+export type { LayeredCacheOptions } from "./layered.js";
+export { namespaced } from "./namespaced.js";
 export { noopLogger, type KitLogger } from "./logger.js";
 export type { CacheManager } from "./manager.js";
 
