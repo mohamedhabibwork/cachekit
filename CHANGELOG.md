@@ -26,6 +26,7 @@ All notable changes to this project are documented in this file.
 - ci: make package publishing idempotent (053e6d0)
 - Merge pull request #2 from mohamedhabibwork/dependabot/npm_and_yarn/multi-00f7b83f97 (cf00dd7)
 - build(deps): bump @vitest/mocker and vitest (1e998fa)
+
 ## [v0.1.2] - 2026-09-09
 
 - feat: initialize CacheKit caching package (2bb51f8)
