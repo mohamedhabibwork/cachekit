@@ -31,6 +31,29 @@ import type {
   Ttl,
 } from "./core.js";
 
+/**
+ * Only `redis://` and `rediss://` (TLS) URLs are accepted, so a mistyped
+ * scheme can't hand credentials to another protocol handler. Every
+ * redis-protocol provider (valkey, dragonfly, elasticache, memorystore,
+ * azure-redis) funnels through `RedisCache.create`, which calls this.
+ */
+function assertRedisUrl(url: string): void {
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    throw new CacheInvalidConfigError("Redis url must be a valid redis:// or rediss:// URL.", {
+      provider: "redis",
+    });
+  }
+  if (parsed.protocol !== "redis:" && parsed.protocol !== "rediss:") {
+    throw new CacheInvalidConfigError(
+      `Redis url must use redis:// or rediss:// (got ${parsed.protocol}).`,
+      { provider: "redis" },
+    );
+  }
+}
+
 /** Minimal cross-version surface used by CacheKit. A prebuilt node-redis client can be injected. */
 export interface RedisClient {
   connect?(): Promise<void>;
@@ -100,6 +123,7 @@ export class RedisCache implements Cache<"redis"> {
       throw new CacheInvalidConfigError("Redis requires either url or an injected client.", {
         provider: "redis",
       });
+    if (options.url !== undefined) assertRedisUrl(options.url);
     let client = options.client;
     if (!client) {
       try {

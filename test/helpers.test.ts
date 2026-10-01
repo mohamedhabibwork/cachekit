@@ -10,6 +10,15 @@ import {
 } from "../src/index.js";
 import { createFakeClock } from "../src/testing.js";
 
+describe("redis url guard", () => {
+  it("rejects non redis:// schemes before any connection attempt", async () => {
+    const { RedisCache } = await import("../src/redis.js");
+    await expect(RedisCache.create({ url: "postgres://h:6379" } as never)).rejects.toThrow(
+      /redis:\/\//,
+    );
+  });
+});
+
 describe("counters", () => {
   it("increments from zero and by custom steps", async () => {
     const cache = createMemoryCache();
