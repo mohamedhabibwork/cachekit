@@ -41,4 +41,12 @@ const user = await cache.getOrSet(`user:${id}`, async () => (await findUser(id))
 
 ## Tiering
 
-Use memory as an explicit L1 in front of a remote provider only when your application owns invalidation/coherence. CacheKit does not claim cross-process coherence for an in-process cache.
+Use memory as an explicit L1 in front of a remote provider with `createLayeredCache` (see [use cases](use-cases.md#16-layered-l1l2-caching--createlayeredcache)). Keep `l1Ttl` short: CacheKit does not claim cross-process coherence for an in-process cache.
+
+```ts
+const cache = createLayeredCache({
+  l1: createMemoryCache({ maxEntries: 1_000 }),
+  l2: redis,
+  l1Ttl: "30s",
+});
+```

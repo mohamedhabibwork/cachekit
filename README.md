@@ -114,6 +114,27 @@ CacheKit works in any framework — it is a plain async library with zero runtim
 
 See [framework integration](docs/frameworks.md) for copy-paste snippets.
 
+## Helpers
+
+Provider-agnostic utilities built on the public contract — `increment`/`decrement` (counters, rate limits), `addIfAbsent`, `pull`, `memoize`, `namespaced` (scoped views), and `createLayeredCache` (L1/L2). See [use cases](docs/use-cases.md).
+
+```ts
+import {
+  createLayeredCache,
+  createMemoryCache,
+  increment,
+  memoize,
+} from "@mohamedhabibwork/cachekit";
+
+const hits = await increment(cache, `rate:${ip}`, { ttl: "1m" });
+const getUser = memoize(cache, (id: string) => db.users.find(id), { key: (id) => `user:${id}` });
+const layered = createLayeredCache({
+  l1: createMemoryCache({ maxEntries: 1_000 }),
+  l2: redis,
+  l1Ttl: "30s",
+});
+```
+
 ## Semantics
 
 - A cache miss is `undefined`; `null` is cacheable.
@@ -134,6 +155,7 @@ npm run check
 
 ## Guides
 
+- [Use cases (every feature, with examples)](docs/use-cases.md)
 - [Caching patterns](docs/caching-patterns.md)
 - [End-to-end examples](docs/examples.md)
 - [Framework integration](docs/frameworks.md)

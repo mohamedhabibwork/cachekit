@@ -2,6 +2,14 @@
 
 All notable changes to this project are documented in this file.
 
+## [Unreleased]
+
+- feat: `increment`/`decrement`, `addIfAbsent`, `pull`, `memoize` helpers
+- feat: `namespaced` scoped cache views and `createLayeredCache` L1/L2 tiering
+- fix: memory `withLock` now admits one waiter at a time (previously all waiters ran together after a release)
+- fix: memory `maxEntries` eviction is now LRU instead of FIFO
+- docs: `docs/use-cases.md` with an example per use case
+
 ## [v0.2.0] - 2026-09-30
 
 - chore: release v0.2.0 (f78a902)

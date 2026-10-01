@@ -74,6 +74,15 @@ await caches.close();            // close every created cache, forget instances
 ```
 Unknown names reject with CacheInvalidConfigError; failed creations are evicted so the next call retries.
 
+## Helpers
+
+- `increment(cache, key, { by?, ttl?, clock? })` / `decrement(...)`: locked read-modify-write counter; TTL set only on creation (fixed window).
+- `addIfAbsent(cache, key, value, setOptions)` -> boolean; `pull(cache, key)` reads then deletes.
+- `memoize(cache, fn, { key: (...args) => key, tags?: (...args) => string[], ttl? })` wraps fn with getOrSet.
+- `namespaced(cache, prefix)`: scoped view storing `prefix:key`; tags global; clear() throws; close() no-op.
+- `createLayeredCache({ l1, l2, l1Ttl?, closeLayers? })`: read L1 then L2 with backfill; writes/deletes/tags hit both; locks + capabilities from L2.
+- Memory `maxEntries` evicts least-recently-used. Full examples: docs/use-cases.md.
+
 ## Semantics (do not get these wrong)
 
 - A cache miss is `undefined`; `null` is a cacheable value.
